@@ -10,4 +10,4 @@ prog: #for sram
 	dfu-util --device 1d50:6146 --alt 0 -D $(filename).bin -R
 
 clean:
-	rm -rf $(filename).blif $(filename).asc $(filename).json $(filename).bin
+	del /s /q $(filename).blif $(filename).asc $(filename).json $(filename).bin
