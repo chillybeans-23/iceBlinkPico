@@ -86,9 +86,9 @@ module fsm #(
 
     // Compute next output values
     always_comb begin
-        next_red = next_state[0];
+        next_red = next_state[2];
         next_green = next_state[1];
-        next_blue = next_state[2];
+        next_blue = next_state[0];
     end
 
     always_ff @(posedge clk) begin
