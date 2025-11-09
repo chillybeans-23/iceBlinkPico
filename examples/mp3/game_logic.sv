@@ -32,33 +32,43 @@ module game_logic #(
     logic [2:0] col;
     logic [2:0] row;
 
-    int alive_neighbours; // alive_neighbours needs to hold 8 values max
-    localparam int matrix_len = 8; // 8 pixel-long LED matrix
+    //logic [3:0] alive_neighbours; // alive_neighbours needs to hold 8 values max
+    int alive_neighbours;
+    localparam logic [3:0] matrix_len = 4'b1000; // 8 pixel-long LED matrix
 
-
-// WORKS IN SIM
+/*
     always_ff @(posedge update_board) begin
         for (int i=0; i<64; i++) begin
             current_board[i] <= next_board[i];
         end
     end
+    */
+
+    always_ff @(posedge transmit_pixel) begin
+        alive_neighbours <= (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len]) + (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col+matrix_len)%matrix_len]) + (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len]) + (current_board[matrix_len*((row+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len]) + (current_board[matrix_len*((row+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len]) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len]) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col+matrix_len)%matrix_len]) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len]);
+    end
         
     always_ff @(posedge clk) begin
 
+        if (update_board) begin
+            for (int i=0; i<64; i++) begin
+                current_board[i] <= next_board[i];
+            end
+        end
         row = pixel[5:3]; // row is MSB half
         col = pixel[2:0]; // col is LSB half
 
         //row = 6'b111000 & pixel; // row is MSB half
         //col = 6'b000111 & pixel; // col is LSB half
 
-        alive_neighbours = (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len] > 0);
+        //alive_neighbours = (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len]) + (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col+matrix_len)%matrix_len]) + (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len]) + (current_board[matrix_len*((row+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len]) + (current_board[matrix_len*((row+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len]) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len]) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col+matrix_len)%matrix_len]) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len]);
         //alive_neighbours = (current_board[(row-8)& 6'b111000 + (col-1)& 6'b000111] > 0) + (current_board[(row-8)& 6'b111000 + col& 6'b000111] > 0) + (current_board[(row-8)& 6'b111000 + (col+1)& 6'b000111] > 0) + (current_board[row& 6'b111000 + (col-1)& 6'b000111] > 0) + (current_board[row& 6'b111000 + (col+1)& 6'b000111] > 0) + (current_board[(row+8)& 6'b111000 + (col-1)& 6'b000111] > 0) + (current_board[(row+8)& 6'b111000 + col& 6'b000111] > 0) + (current_board[(row+8)& 6'b111000 + (col+1)& 6'b000111] > 0);
 
         // deciding whether next state should be dead or alive
         if (current_board[pixel]) begin // if current_board[pixel] is alive
-            next_board[pixel] = (alive_neighbours == 2 || alive_neighbours == 3) ? 1 : 0; // alive if 2 or 3 alive neighbours. else dead.
+            next_board[pixel] <= (alive_neighbours == 2 || alive_neighbours == 3) ? 1 : 0; // alive if 2 or 3 alive neighbours. else dead.
         end else begin // if current_board[pixel] is dead
-            next_board[pixel] = (alive_neighbours == 3) ? 1 : 0; // dead cell with 3 living neighbours becomes alive
+            next_board[pixel] <= (alive_neighbours == 3) ? 1 : 0; // dead cell with 3 living neighbours becomes alive
         end
     end
     
@@ -104,12 +114,12 @@ module game_logic #(
     endgenerate
     */
     
-/*
-    always_ff @(posedge clk) begin
-        pixel_data = current_board[pixel];
+
+    always_ff @(negedge transmit_pixel) begin
+        pixel_data <= (current_board[pixel]) ? alive : dead;
     end
-    */
-    assign pixel_data = (current_board[pixel]) ? alive : dead;
+    
+    //assign pixel_data = (current_board[pixel]) ? alive : dead;
     
 
 
