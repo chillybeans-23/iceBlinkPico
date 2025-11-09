@@ -4,7 +4,6 @@
 // always (posedge clk) read_data = current_board[pixel] (choose some 8-bit representation)
 // always (posedge update_board) current_board = next_board (pixel by pixel?)
 
-// try alive_neighbour as binary not int
 
 module game_logic #(
     parameter INIT_FILE = ""
@@ -16,10 +15,10 @@ module game_logic #(
     output logic [7:0] pixel_data // shift register takes in pixel data as 8-bit
 );
 
-    // memory
-    logic [7:0] current_board [0:63]; // 64 8-bit values
-    logic [7:0] next_board [0:63];
+    logic current_board [63:0];// 64 1-bit values. unpacked array
+    logic next_board [63:0];
 
+    // memory
     initial if (INIT_FILE) begin
         $readmemh(INIT_FILE, current_board);
     end
@@ -30,126 +29,63 @@ module game_logic #(
     localparam [7:0] dead = 8'b00000000;
 
     // pixel row and column
-    int col;
-    int row;
+    logic [2:0] col;
+    logic [2:0] row;
 
     int alive_neighbours; // alive_neighbours needs to hold 8 values max
     localparam int matrix_len = 8; // 8 pixel-long LED matrix
 
-/*
-    // calculate pixel for the next board based on its neighbours for the current board
-    always_ff @(negedge transmit_pixel) begin
 
-        alive_neighbours = 0;
-
-        //find row and column for this pixel
-        col = int'(pixel[5:3]); // col is second half
-        row = int'(pixel[2:0]); // row is first half
-
-
-        // go through all neighbours and count number of alive neighbours
-        if (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len]) begin // top left
-            alive_neighbours = alive_neighbours + 1;
+// WORKS IN SIM
+    always_ff @(posedge update_board) begin
+        for (int i=0; i<64; i++) begin
+            current_board[i] <= next_board[i];
         end
-        if (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + col]) begin // top middle
-            alive_neighbours = alive_neighbours + 1;
-        end
-        if (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col+1)%matrix_len]) begin // top right
-            alive_neighbours = alive_neighbours + 1;
-        end
-        if (current_board[matrix_len*row + (col-1+matrix_len)%matrix_len]) begin // middle left
-            alive_neighbours = alive_neighbours + 1;
-        end
-        if (current_board[matrix_len*row + (col+1)%matrix_len]) begin // middle right
-            alive_neighbours = alive_neighbours + 1;
-        end
-        if (current_board[matrix_len*((row+1)%matrix_len) + (col-1+matrix_len)%matrix_len]) begin // bottom left
-            alive_neighbours = alive_neighbours + 1;
-        end
-        if (current_board[matrix_len*((row+1)%matrix_len) + col]) begin // bottom middle
-            alive_neighbours = alive_neighbours + 1;
-        end
-        if (current_board[matrix_len*((row+1)%matrix_len) + (col+1)%matrix_len]) begin // bottom right
-            alive_neighbours = alive_neighbours + 1;
-        end
+    end
         
+    always_ff @(posedge clk) begin
 
-        // deciding whether next state should be dead or alive
-        if (current_board[pixel]) begin // if current_board[pixel] is alive
-            if (alive_neighbours < 2) begin // living cell with fewer than 2 living neighbours dies
-                next_board[pixel] <= dead;
-            end
-            if (alive_neighbours >= 2 && alive_neighbours <= 3) begin // living cell with 2-3 living neighbours lives
-                next_board[pixel] <= alive;
-            end
-            if (alive_neighbours > 3) begin // living cell with more than 3 living neighbours dies
-                next_board[pixel] <= dead;
-            end
-        end
+        row = pixel[5:3]; // row is MSB half
+        col = pixel[2:0]; // col is LSB half
 
-        if (!current_board[pixel]) begin // if current_board[pixel] is dead
-            if (alive_neighbours == 3) begin // dead cell with 3 living neighbours becomes alive
-                next_board[pixel] <= alive;
-            end else begin
-                next_board[pixel] <= dead;
-            end
-        end
+        //row = 6'b111000 & pixel; // row is MSB half
+        //col = 6'b000111 & pixel; // col is LSB half
 
-    end
-
-*/
-
-// attempt #2 counts neighbours correctly
-    always_ff @(negedge transmit_pixel) begin
-        alive_neighbours <= 0; // reset number of pixels everytime pixel changes
-        //find row and column for this pixel
-        col <= int'(pixel[5:3]); // col is second half
-        row <= int'(pixel[2:0]); // row is first half
-    end
-
-
-/*
-    genvar icol;
-    genvar irow;
-    generate
-        for (irow=-1; irow<2; irow++) begin
-            for (icol=-1; icol<2; icol++) begin
-                always_ff @(posedge transmit_pixel) begin // checking neighbours
-                    if (current_board[matrix_len*((row+irow+matrix_len)%matrix_len) + (col+icol+matrix_len)%matrix_len]) begin
-                        if (!(irow==0 && icol==0)) begin // don't count itself as a neighbour
-                            alive_neighbours++;
-                        end
-                    end
-                end
-            end
-        end
-    endgenerate
-    */
-
-    always_comb begin
         alive_neighbours = (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len] > 0);
+        //alive_neighbours = (current_board[(row-8)& 6'b111000 + (col-1)& 6'b000111] > 0) + (current_board[(row-8)& 6'b111000 + col& 6'b000111] > 0) + (current_board[(row-8)& 6'b111000 + (col+1)& 6'b000111] > 0) + (current_board[row& 6'b111000 + (col-1)& 6'b000111] > 0) + (current_board[row& 6'b111000 + (col+1)& 6'b000111] > 0) + (current_board[(row+8)& 6'b111000 + (col-1)& 6'b000111] > 0) + (current_board[(row+8)& 6'b111000 + col& 6'b000111] > 0) + (current_board[(row+8)& 6'b111000 + (col+1)& 6'b000111] > 0);
 
         // deciding whether next state should be dead or alive
         if (current_board[pixel]) begin // if current_board[pixel] is alive
-            if (alive_neighbours < 2) begin // living cell with fewer than 2 living neighbours dies
-                next_board[pixel] = dead;
-            end
-            if (alive_neighbours >= 2 && alive_neighbours <= 3) begin // living cell with 2-3 living neighbours lives
-                next_board[pixel] = alive;
-            end
-            if (alive_neighbours > 3) begin // living cell with more than 3 living neighbours dies
-                next_board[pixel] = dead;
+            next_board[pixel] = (alive_neighbours == 2 || alive_neighbours == 3) ? 1 : 0; // alive if 2 or 3 alive neighbours. else dead.
+        end else begin // if current_board[pixel] is dead
+            next_board[pixel] = (alive_neighbours == 3) ? 1 : 0; // dead cell with 3 living neighbours becomes alive
+        end
+    end
+    
+
+// update all at update_board, instead of incrementally with clk. no counting neighbours! get stuck at: Current simulation time is 985336 ticks.
+/*
+    always_ff @(posedge update_board) begin
+        for (logic [5:0] i=6'b000000; i<=6'b111111; i++) begin
+
+            row = i[5:3]; // row is MSB half
+            col = i[2:0]; // col is LSB half
+            alive_neighbours = (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row-1+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col-1+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col+matrix_len)%matrix_len] > 0) + (current_board[matrix_len*((row+1+matrix_len)%matrix_len) + (col+1+matrix_len)%matrix_len] > 0);
+                
+
+            // deciding whether next state should be dead or alive
+            if (current_board[i]) begin // if current_board[pixel] is alive
+                next_board[i] = (alive_neighbours == 2 || alive_neighbours == 3) ? alive : dead; // alive if 2 or 3 alive neighbours. else dead.
+            end else begin
+                next_board[i] = (alive_neighbours == 3) ? alive : dead; // dead cell with 3 living neighbours becomes alive
             end
         end
 
-        if (!current_board[pixel]) begin // if current_board[pixel] is dead
-            if (alive_neighbours == 3) begin // dead cell with 3 living neighbours becomes alive
-                next_board[pixel] = alive;
-            end else begin
-                next_board[pixel] = dead;
-            end
+        for (int j=0; j<64; j++) begin
+            current_board[j] = next_board[j];
         end
     end
+    */
 
 
     // assign next board to current board when it's time to update
@@ -159,7 +95,7 @@ module game_logic #(
         for (i=0; i<64; i++) begin
             always_ff @(posedge update_board) begin
                 current_board[i] <= next_board[i];
-                next_board[i] <= 8'bxxxxxxxx;
+                //next_board[i] <= 8'bxxxxxxxx; // removed this so only one always_ff assigns next_board
             end
             
             //current_board <= next_board;
@@ -167,12 +103,14 @@ module game_logic #(
         end
     endgenerate
     */
-
-
-
+    
+/*
     always_ff @(posedge clk) begin
         pixel_data = current_board[pixel];
     end
+    */
+    assign pixel_data = (current_board[pixel]) ? alive : dead;
+    
 
 
 endmodule
