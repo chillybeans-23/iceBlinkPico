@@ -1,28 +1,28 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Fri Nov 07 15:10:16 2025
+[*] Sat Nov 08 16:31:12 2025
 [*]
 [dumpfile] "C:\Users\afong\Desktop\CompArch\iceBlinkPico\examples\mp3\led_matrix.vcd"
-[dumpfile_mtime] "Fri Nov 07 15:07:41 2025"
-[dumpfile_size] 61267886
+[dumpfile_mtime] "Sat Nov 08 16:29:43 2025"
+[dumpfile_size] 61254632
 [savefile] "C:\Users\afong\Desktop\CompArch\iceBlinkPico\examples\mp3\wave_style.gtkw"
 [timestart] 0
 [size] 1920 973
-[pos] -59 -56
-*-19.000000 492480 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -1 -1
+*-17.000000 445600 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] led_matrix_tb.
 [treeopen] led_matrix_tb.u0.
 [sst_width] 280
-[signals_width] 190
+[signals_width] 219
 [sst_expanded] 1
 [sst_vpaned_height] 287
 @22
 led_matrix_tb.u0.blue_data[7:0]
 @28
 led_matrix_tb.u0.update_board
-@8022
+@8025
 led_matrix_tb.u0.pixel[5:0]
-@421
+@420
 led_matrix_tb.u0.u5.alive_neighbours
 [pattern_trace] 1
 [pattern_trace] 0

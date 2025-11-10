@@ -1,4 +1,3 @@
-//CAN REUSE AS IS
 module ws2812b(
     input logic clk, 
     input logic serial_in, 

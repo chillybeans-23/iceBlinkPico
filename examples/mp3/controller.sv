@@ -5,7 +5,6 @@ module controller (
     output logic transmit_pixel, 
     output logic [5:0] pixel,
     output logic update_board
-    //output logic [4:0] frame
 );
 
     localparam TRANSMIT_FRAME       = 1'b0;
@@ -15,7 +14,7 @@ module controller (
     localparam [2:0] LOAD_SREG      = 3'b010;
     localparam [2:0] TRANSMIT_PIXEL = 3'b100;
 
-    localparam [8:0] TRANSMIT_CYCLES    = 9'd360;       // = 24 bits / pixel x 15 cycles / bit. why 15 cycles per bit??
+    localparam [8:0] TRANSMIT_CYCLES    = 9'd360;       // = 24 bits / pixel x 15 cycles / bit
     localparam [23:0] IDLE_CYCLES       = 24'd00100000; // CLK frequency is 12MHz, so 1,200 cycles is 100us. 100[us]*10000[100us/s] = 1[s]. 1200[cycles/100us]*10000[100us/s] = 12000000[cycles/s]
 
     logic state = TRANSMIT_FRAME;
@@ -25,9 +24,8 @@ module controller (
     logic [2:0] next_transmit_phase;
 
     logic [5:0] pixel_counter = 6'd0;
-    //logic [4:0] frame_counter = 5'd0;
     logic [8:0] transmit_counter = 9'd0;
-    logic [19:0] idle_counter = 20'd0;
+    logic [23:0] idle_counter = 24'd0;
 
     logic transmit_pixel_done;
     logic idle_done;
@@ -75,13 +73,6 @@ module controller (
             pixel_counter <= pixel_counter + 1;
         end
     end
-/*
-    always_ff @(negedge clk) begin
-        if (idle_done) begin
-            frame_counter <= frame_counter + 1;
-        end
-    end
-*/
 
     always_ff @(negedge clk) begin
         if (transmit_phase == TRANSMIT_PIXEL) begin
@@ -97,12 +88,11 @@ module controller (
             idle_counter <= idle_counter + 1;
         end
         else begin
-            idle_counter <= 20'd0;
+            idle_counter <= 24'd0;
         end
     end
 
     assign pixel = pixel_counter;
-    //assign frame = frame_counter;
 
     assign load_sreg = (transmit_phase == LOAD_SREG);
     assign transmit_pixel = (transmit_phase == TRANSMIT_PIXEL);

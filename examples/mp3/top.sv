@@ -1,4 +1,3 @@
-// error in 8th line of memory.sv
 
 `include "ws2812b.sv"
 `include "controller.sv"
@@ -17,13 +16,8 @@ module top(
     logic [7:0] red_data;
     logic [7:0] green_data;
     logic [7:0] blue_data;
-    //logic [7:0] current_board_red [0:63];
-    //logic [7:0] current_board_green [0:63];
-    //logic [7:0] current_board_blue [0:63];
 
     logic [5:0] pixel; // 64 pixels (LEDs)
-    //logic [4:0] frame; // 32 frames total
-    //logic [10:0] address;
 
     logic [23:0] shift_reg = 24'd0;
     logic load_sreg;
@@ -31,37 +25,6 @@ module top(
     logic shift;
     logic ws2812b_out;
     logic update_board;
-
-    //assign address = { frame, pixel };
-
-/*
-    // Instance sample memory for red channel
-    memory #(
-        .INIT_FILE      ("start/red.txt")
-    ) u1 (
-        .clk            (clk), 
-        //.read_address   (address), 
-        .start_board      (start_red)
-    );
-
-    // Instance sample memory for green channel
-    memory #(
-        .INIT_FILE      ("start/green.txt")
-    ) u2 (
-        .clk            (clk), 
-        //.read_address   (address), 
-        .start_board      (start_green)
-    );
-
-    // Instance sample memory for blue channel
-    memory #(
-        .INIT_FILE      ("start/blue.txt")
-    ) u3 (
-        .clk            (clk), 
-        //.read_address   (address), 
-        .start_board      (start_blue)
-    );
-    */
 
     // Instance the WS2812B output driver
     ws2812b u1 (
@@ -90,7 +53,6 @@ module top(
         .update_board (update_board),
         .transmit_pixel (transmit_pixel), 
         .pixel_data   (red_data)
-        //.current_board (current_board_red)
     );
 
 
@@ -103,7 +65,6 @@ module top(
         .update_board (update_board),
         .transmit_pixel (transmit_pixel), 
         .pixel_data   (green_data)
-        //.current_board (current_board_green)
     );
 
 
@@ -116,7 +77,6 @@ module top(
         .update_board (update_board),
         .transmit_pixel (transmit_pixel), 
         .pixel_data   (blue_data)
-        //.current_board (current_board_blue)
     );
 
     always_ff @(posedge clk) begin
